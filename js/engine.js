@@ -19,6 +19,15 @@ function emojiTex(e){if(emojiCache[e])return emojiCache[e];
  return emojiCache[e]=nearest(new THREE.CanvasTexture(c))}
 function icon(e,size){const m=new THREE.SpriteMaterial({map:emojiTex(e),transparent:true,alphaTest:.3,depthWrite:true});const s=new THREE.Sprite(m);s.scale.set(size||.55,size||.55,1);return s}
 
+/* Small museum labels replace floating pixel emoji at the main exhibits. */
+function stationLabel(text){
+ const c=document.createElement('canvas');c.width=1024;c.height=256;const x=c.getContext('2d');
+ x.fillStyle='#24372f';x.fillRect(0,0,1024,256);x.strokeStyle='#b9a172';x.lineWidth=6;x.strokeRect(6,6,1012,244);x.fillStyle='#eee4cb';x.font='500 48px "Libre Franklin",Arial';x.textAlign='center';
+ const words=text.replace(/^.*?: /,'').split(' ');let line='',lines=[];for(const word of words){if(x.measureText(line+' '+word).width>940&&line){lines.push(line);line=word}else line+=(line?' ':'')+word}if(line)lines.push(line);
+ lines.slice(0,3).forEach((l,i)=>x.fillText(l,512,128-(Math.min(lines.length,3)-1)*29+i*58));const texture=new THREE.CanvasTexture(c);texture.encoding=THREE.sRGBEncoding;
+ const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture}));sprite.scale.set(1.5,.375,1);return sprite;
+}
+
 /* ---------- artwork paintings ---------- */
 const AW=128,AH=94;
 const art=S.art=[];
@@ -66,13 +75,13 @@ E.refreshSeen=()=>{art.forEach((o,i)=>{if(o)paintArt(i)})};
 
 /* ---------- sign textures ---------- */
 function signTex(text,g,opts){
- const c=document.createElement('canvas');c.width=64;c.height=40;const x=c.getContext('2d');x.imageSmoothingEnabled=false;
+ const c=document.createElement('canvas');c.width=512;c.height=320;const x=c.getContext('2d');x.scale(8,8);x.imageSmoothingEnabled=true;
  const acc=D.G[g].accent;x.fillStyle='#1b140c';x.fillRect(0,0,64,40);x.fillStyle=acc;x.fillRect(2,2,60,36);x.fillStyle='#1b140c';x.fillRect(4,4,56,32);
- x.fillStyle='#f3e4bf';x.font='bold 7px monospace';x.textAlign='center';
+ x.fillStyle='#f3e4bf';x.font='600 7px "Libre Franklin",Arial';x.textAlign='center';
  const words=text.split(' ');const lines=[];let cur='';words.forEach(w=>{if((cur+' '+w).trim().length>11){lines.push(cur);cur=w}else cur=(cur+' '+w).trim()});lines.push(cur);
  const n=Math.min(lines.length,3);const by=(opts&&opts.legend)?15:21;lines.slice(0,3).forEach((l,i)=>x.fillText(l.slice(0,12),32,by-(n-1)*4+i*9));
  if(opts&&opts.legend){x.fillStyle={gold:'#d4af37',silver:'#c3c9cf',green:'#2f8f58'}[opts.legend];x.fillRect(24,32,16,3)}
- return nearest(new THREE.CanvasTexture(c));
+ const tex=new THREE.CanvasTexture(c);tex.magFilter=tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;return tex;
 }
 
 /* ---------- build ---------- */
@@ -81,10 +90,10 @@ E.build=function(){
  W.layout();Pr.place();W.mesh();
  // chunk meshes
  const CH=W._chunks();
- Object.keys(CH).forEach(k=>{const ch=CH[k];if(!ch.n)return;const m=new THREE.Mesh(W.buildGeometry(ch),mat);m.matrixAutoUpdate=false;scene.add(m)});
+ Object.keys(CH).forEach(k=>{const ch=CH[k];if(!ch.n)return;const m=new THREE.Mesh(W.buildGeometry(ch),k==='water'?S.waterMat:mat);m.matrixAutoUpdate=false;scene.add(m)});
  // paintings
  Object.values(W.artSpots).forEach(sp=>{
-  const i=sp.i;const c=document.createElement('canvas');c.width=AW;c.height=AH;const ctx=c.getContext('2d',{willReadFrequently:true});
+  const i=sp.i;const c=document.createElement('canvas');c.width=AW*4;c.height=AH*4;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.scale(4,4);
   const tex=new THREE.CanvasTexture(c);tex.magFilter=tex.minFilter=THREE.LinearFilter;tex.generateMipmaps=false;art[i]={canvas:c,ctx,tex,img:null};
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(sp.w,sp.h),new THREE.MeshBasicMaterial({map:tex,color:new THREE.Color(sp.light*.98,sp.light*.98,sp.light*.98)}));
   const off=.03;mesh.position.set(sp.x+sp.nx*off,sp.z,sp.y+sp.ny*off);
@@ -101,7 +110,7 @@ E.build=function(){
  // hanging staircase signs
  (W.hang||[]).forEach(h=>{const tex=signTex(h.text,h.g);const m=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.81),new THREE.MeshBasicMaterial({map:tex,side:THREE.DoubleSide}));m.position.set(h.x,h.z,h.y);m.rotation.y=-Math.PI/2;scene.add(m)});
  // front banner
- {const c=document.createElement('canvas');c.width=128;c.height=20;const x=c.getContext('2d');x.fillStyle='#1b140c';x.fillRect(0,0,128,20);x.fillStyle='#d4af37';x.fillRect(1,1,126,18);x.fillStyle='#1b140c';x.fillRect(3,3,122,14);x.fillStyle='#f3d98a';x.font='bold 10px monospace';x.textAlign='center';x.fillText('THE ROARING SOCIETY',64,14);
+ {const c=document.createElement('canvas');c.width=1024;c.height=160;const x=c.getContext('2d');x.scale(8,8);x.fillStyle='#1b140c';x.fillRect(0,0,128,20);x.fillStyle='#d4af37';x.fillRect(1,1,126,18);x.fillStyle='#1b140c';x.fillRect(3,3,122,14);x.fillStyle='#f3d98a';x.font='600 10px "Libre Franklin",Arial';x.textAlign='center';x.fillText('THE ROARING SOCIETY',64,14);
   const m=new THREE.Mesh(new THREE.PlaneGeometry(5.6,.88),new THREE.MeshBasicMaterial({map:nearest(new THREE.CanvasTexture(c))}));m.position.set(30,4.55,60.05);scene.add(m);}
  // door leaves
  S.doors=[];const leafGeo=W.boxGeo(.86,3.28,.08,'door',.95);
@@ -134,7 +143,7 @@ function buildEntities(){
  W.stations.forEach(st=>{
   const s=addSprite({id:st.id,kind:'station',gal:st.g,x:st.x,y:st.y,label:st.label,pick:st.pick,reach:st.reach,zc:Math.min(st.iconZ-.9,1.7)});
   const em=st.id.startsWith('tp')?'✨':STATION_ICON[st.id]||'📍';
-  s.mesh=icon(em,.6);s.mesh.position.set(st.x,st.iconZ,st.y);s.base=st.iconZ;scene.add(s.mesh);E.stationSprites[st.id]=s});
+  s.mesh=stationLabel(st.label);s.mesh.position.set(st.x,st.iconZ,st.y);s.base=st.iconZ;scene.add(s.mesh);E.stationSprites[st.id]=s});
  // hidden-room extras
  const ex=W.extras;
  [['raid',ex.raid,'Back office: Raid! mini-game',5],['vaultcredits',ex.vault,'Credits & behind-the-scenes notes',7]].forEach(([id,p,label,g])=>{
@@ -170,6 +179,7 @@ E.openSecret=function(g,silent){
  if(!o.open){o.open=true;o.solid.dead=true;if(silent)o.p=1}
  W.map[W.secretDoor[g].y*N+W.secretDoor[g].x]=0;RS.S.secretOpen[g]=true;
  (D.ITEMS[g]||[]).forEach(it=>{const s=E.itemSprites[it[0]];if(s&&!RS.S.items.includes(it[0]))s.visible=true});
+ if(g===6&&E.stationSprites.makers)E.stationSprites.makers.visible=true;
  if(g===7&&E.stationSprites.vaultcredits)E.stationSprites.vaultcredits.visible=true;
  if(g===5&&E.stationSprites.raid)E.stationSprites.raid.visible=true;
  if(!silent){RS.S.secret[g]=true;RS.save();RS.emit('secret',g)}

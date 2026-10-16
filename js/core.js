@@ -28,6 +28,16 @@ let saveT=0;
 RS.save=()=>{clearTimeout(saveT);saveT=setTimeout(()=>ls.set(SAVE_KEY,JSON.stringify(S)),150)};
 RS.reset=()=>{ls.set(SAVE_KEY,'');location.reload()};
 
+/* ---------- Curator Points: persistent, one-time rewards ---------- */
+S.awards=S.awards||{};
+Object.keys(S.quests).forEach(id=>{if(S.quests[id]==='complete')S.awards['quest:'+id]=true});
+Object.keys(S.secretOpen).forEach(g=>{if(S.secretOpen[g])S.awards['secret:'+g]=true});
+RS.award=function(id,points,label){
+ if(S.awards[id])return false;S.awards[id]=true;S.points=(Number(S.points)||0)+points;RS.save();RS.emit('score.changed',S.points);
+ if(label)RS.toast(label+' · +'+points+' points','done');return true;
+};
+RS.on('secret',g=>RS.award('secret:'+g,25,'Hidden room discovered'));
+
 /* ---------- toasts ---------- */
 RS.toast=function(msg,kind){
  let box=RS.$('#toasts');if(!box){box=RS.el('div',{id:'toasts','aria-live':'polite'});document.body.append(box)}
@@ -111,7 +121,7 @@ RS.openArtwork=function(id,opts){
  RS.closeViewer();lastFocus=document.activeElement;
  const first=RS.S.seen.indexOf(id)<0;
  const wrap=RS.el('div',{class:'viewer',role:'dialog','aria-modal':'true','aria-label':art.title});
- overlayEl=wrap;
+ overlayEl=wrap;RS.releasePointer();
  const media=RS.el('div',{class:'v-media'});
  const info=RS.el('div',{class:'v-info'});
  const close=RS.el('button',{class:'v-close','aria-label':'Close',onclick:RS.closeViewer},['✕']);
@@ -183,6 +193,11 @@ function routeMap(){
  Object.entries(cities).map(([n,p])=>`<rect x="${p[0]-5}" y="${p[1]-5}" width="10" height="10" fill="#222"/><text x="${p[0]-18}" y="${p[1]-10}">${n}</text>`).join('')+`<text x="10" y="20" font-weight="bold" font-size="13">Schematic routes (not to scale)</text></svg>`;
 }
 
+// All text dialogs share one pointer and movement policy.
+RS.releasePointer=function(){
+ const E=window.Engine;if(E){for(const key in E.keys)E.keys[key]=false;E.player.vxs=0;E.player.vys=0;E.player.jumpReq=false;E.moving=false}
+ if(document.pointerLockElement&&document.exitPointerLock)document.exitPointerLock();
+};
 /* ---------- Generic overlay for sims/panels ---------- */
 RS.overlay=function(title,node,opts){
  opts=opts||{};RS.closeOverlay();
@@ -190,7 +205,7 @@ RS.overlay=function(title,node,opts){
  const head=RS.el('div',{class:'ov-head'},[RS.el('h2',{class:'pix'},[title]),RS.el('button',{class:'v-close','aria-label':'Close',onclick:()=>RS.closeOverlay()},['✕'])]);
  const body=RS.el('div',{class:'ov-body'});body.append(node);
  o.append(RS.el('div',{class:'ov-card'},[head,body]));document.body.append(o);
- RS._ov={el:o,onClose:opts.onClose,last:document.activeElement};
+ RS._ov={el:o,onClose:opts.onClose,last:document.activeElement};RS.releasePointer();
  o.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();RS.closeOverlay()}});
  const f=o.querySelector('button, input, select');if(f)f.focus();
  return o;
@@ -234,7 +249,7 @@ RS.checkQuests=function(){
  Q.forEach(q=>{
   const st=s.quests[q.id];
   if(!st&&discovered(q.disc)){s.quests[q.id]='active';changed=true;RS.toast('New quest discovered: '+q.title,'quest');RS.sfx&&RS.sfx('quest')}
-  if(s.quests[q.id]==='active'&&q.obj.every(objDone)){s.quests[q.id]='complete';s.points+=10;changed=true;RS.toast('Quest complete: '+q.title,'done');RS.sfx&&RS.sfx('done');RS.emit('quest.complete',q.id)}
+  if(s.quests[q.id]==='active'&&q.obj.every(objDone)){s.quests[q.id]='complete';RS.award('quest:'+q.id,25,'Quest complete: '+q.title);changed=true;RS.sfx&&RS.sfx('done');RS.emit('quest.complete',q.id)}
  });
  if(changed){RS.save();RS.emit('quests.changed')}
 };

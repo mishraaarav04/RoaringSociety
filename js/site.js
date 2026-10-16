@@ -31,8 +31,8 @@ nav.addEventListener('click',e=>{if(e.target.tagName==='A')nav.classList.remove(
 // lazy-load game scripts
 let loading=null;
 function loadScripts(list){return Promise.all(list.map(src=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.async=false;s.onload=res;s.onerror=()=>rej(new Error('Could not load '+src));document.body.append(s)})))}
-const GAME_SCRIPTS=['js/vendor/three.min.js','js/atlas.js','js/world.js','js/building.js','js/physics.js','js/props.js','js/props2.js','js/npc.js','js/engine.js','js/engine_run.js','js/sims.js','js/game.js'];
-function loadGame(){if(loading)return loading;loading=loadScripts(GAME_SCRIPTS);return loading}
+const GAME_SCRIPTS=['js/vendor/three.min.js','js/atlas.js','js/world.js','js/building.js','js/physics.js','js/props.js','js/props2.js','js/npc.js','js/engine.js','js/materials.js','js/museum.js','js/engine_run.js','js/visit.js','js/sims.js','js/voice.js','js/game.js'];
+function loadGame(){if(loading)return loading;loading=loadScripts(GAME_SCRIPTS).then(()=>window.Atlas.ready);return loading}
 RS.$$('[data-play]').forEach(b=>b.addEventListener('click',async()=>{b.disabled=true;const t=b.textContent;b.textContent='Loading…';try{await loadGame();window.Game.start()}catch(e){console.error(e);alert('Could not start the game: '+e.message)}b.disabled=false;b.textContent=t}));
 // preload game scripts when idle (does not block page)
 (window.requestIdleCallback?window.requestIdleCallback(()=>{loadGame().catch(()=>{})},{timeout:5000}):setTimeout(()=>{loadGame().catch(()=>{})},4000));

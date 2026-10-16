@@ -248,14 +248,14 @@ Sims.bib=function(){
   if(!S.bib.includes(b.id)){S.bib.push(b.id);RS.save();RS.emit('station','bibopen')}RS.checkQuests();const c=el('p',{class:'small'},[S.bib.length+' of 7 books opened'])
   card.append(c)};
  const tb=el('div',{class:'qb-tabs'});[['all','All'],['primary','Primary'],['secondary','Secondary']].forEach(f=>tb.append(el('button',{class:'tab'+(f[0]===filt?' on':''),onclick:e=>{filt=f[0];tb.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b===e.target));draw()}},[f[1]])));
- w.append(tb,shelf,card,el('h4',{},['Planned additions']),el('p',{class:'small'},['<i>America’s History</i>, Volume II; <i>American Issues: A Documentary Reader</i>; library databases such as Gale; and chapter materials on the revived Klan and Prohibition.']));
+ w.append(tb,shelf,card,el('h4',{},['Planned additions']),el('p',{class:'small',html:'<i>America’s History</i>, Volume II; <i>American Issues: A Documentary Reader</i>; library databases such as Gale; and chapter materials on the revived Klan and Prohibition.'}));
  draw();RS.overlay('Bibliography Wall',w);
 };
 const READ=[['Calvin Coolidge, 1921','“America must be kept American.” (Excerpt of a magazine article, read aloud.)'],['Gitlow majority (Sanford), 1925','We may and do assume that freedom of speech and of the press, which are protected by the First Amendment from abridgment by Congress, are among the fundamental personal rights and liberties protected by the due process clause of the Fourteenth Amendment from impairment by the States.'],['Gitlow dissent (Holmes), 1925','Every idea is an incitement.'],['18th Amendment, 1919','After one year from the ratification of this article the manufacture, sale, or transportation of intoxicating liquors is hereby prohibited.'],['21st Amendment, 1933','The eighteenth article of amendment to the Constitution of the United States is hereby repealed.']];
 Sims.radio=function(){
  const w=el('div',{class:'radio'},[el('p',{},['Tune the dial. Each setting reads a primary-source excerpt aloud with captions. (Voice reading of public-domain text; archival audio is not bundled.)'])]);
  const dial=el('input',{type:'range',min:0,max:READ.length-1,step:1,value:0,'aria-label':'Radio dial'});const cap=el('p',{class:'radio-cap','aria-live':'polite'},['']);const lab=el('h4',{},[READ[0][0]]);
- const play=()=>{const r=READ[+dial.value];lab.textContent=r[0];cap.textContent=r[1];RS.narrate(r[1]);if(!S.radio.includes(r[0])){S.radio.push(r[0]);RS.save();RS.checkQuests()}};
+ const play=()=>{const r=READ[+dial.value];lab.textContent=r[0];cap.textContent=r[1];RS.narrate(r[1],RS.VOICE&&RS.VOICE.radio&&RS.VOICE.radio[+dial.value]);if(!S.radio.includes(r[0])){S.radio.push(r[0]);RS.save();RS.checkQuests()}};
  dial.addEventListener('input',()=>{lab.textContent=READ[+dial.value][0]});
  w.append(dial,lab,btn('▶ Listen',play),cap,el('p',{class:'small'},['Recordings heard: '+S.radio.length+' of '+READ.length]));RS.overlay('Radio Room',w);
 };
@@ -313,7 +313,16 @@ Sims.atrium=function(){
  w.append(body);build(0);RS.overlay('Guiding Questions Atrium',w);
 };
 Sims.finalDone=function(){
- const w=el('div',{class:'prose'},[el('h3',{},['You answered both Guiding Questions']),el('p',{},['Take your Visitor Passport and certificate to the Curator’s Office desk.']),btn('Open the Curator’s Office',()=>{RS.closeOverlay();Sims.curator()})]);RS.overlay('The Curator’s Argument',w);
+ const w=el('div',{class:'prose'},[el('h3',{},['You answered both Guiding Questions']),el('p',{},['Take your Visitor Passport and certificate to the Curator’s Office desk.']),btn('Open the Curator’s Office',()=>{RS.closeOverlay();Sims.curator()}),btn('🎬 One more thing…',()=>Sims.creditsReel())]);RS.overlay('The Curator’s Argument',w);
+};
+/* Easter egg: the credits video, offered once the visitor has finished the final quest. */
+Sims.creditsReel=function(){
+ const v=el('video',{controls:'',playsinline:'',preload:'metadata',class:'credits-video','aria-label':'Roaring Society credits video'});
+ v.src='assets/video/credits.mp4';
+ let playing=false;const set=on=>{if(on!==playing){playing=on;RS.emit(on?'credits.start':'credits.end')}};
+ v.addEventListener('play',()=>set(true));v.addEventListener('pause',()=>set(false));v.addEventListener('ended',()=>set(false));
+ const w=el('div',{class:'credits-reel'},[el('p',{class:'small'},['Thanks for visiting. Press play for the credits.']),v]);
+ RS.overlay('Credits',w,{onClose:()=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}set(false)}});
 };
 Sims.curator=function(){
  const w=el('div',{class:'prose'});
@@ -325,7 +334,7 @@ Sims.curator=function(){
   [1,2,3,4,5].forEach((g,i)=>{x.beginPath();x.arc(150+i*125,420,34,0,7);x.fillStyle=S.stamps.includes(g)?D.G[g].accent:'#ccc';x.fill();x.fillStyle='#fff';x.font='bold 18px Georgia';x.fillText(['I','II','III','IV','V'][i],150+i*125,427)});
   x.fillStyle='#2b2118';x.font='16px Georgia';x.fillText(new Date().toLocaleDateString(),400,505)};
  name.addEventListener('input',draw);draw();
- w.append(el('h3',{},['Visitor Passport & Certificate']),el('p',{},['Type any name you like. The game does not store it.']),name,c,btn('Download certificate (PNG)',()=>{c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='roaring-society-certificate.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)})}));
+ w.append(el('h3',{},['Visitor Passport & Certificate']),el('p',{},['Type any name you like. The game does not store it.']),name,c,btn('🎬 Credits',()=>Sims.creditsReel()),btn('Download certificate (PNG)',()=>{c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='roaring-society-certificate.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)})}));
  RS.overlay('Curator’s Office',w);
 };
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Roaring Society: An Interactive 3D Digital Museum</title>
-<meta name="description" content="A browser-based pixel-art museum about social conflict and civil liberties in 1920s America: the Great Migration, the ACLU, the Red Scare, Gitlow v. New York, and Prohibition.">
+<meta name="description" content="A browser-based museum about social conflict and civil liberties in 1920s America: the Great Migration, the ACLU, the Red Scare, Gitlow v. New York, and Prohibition.">
 <meta name="theme-color" content="#2b2118">
 <meta property="og:title" content="The Roaring Society: An Interactive 3D Digital Museum">
 <meta property="og:description" content="Walk through five galleries on race, immigration, radicalism, civil liberties, and Prohibition in the 1920s.">
@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -38,7 +38,7 @@
   <p class="eyebrow pix">An Interactive 3D Digital Museum</p>
   <h1 class="pix">The Roaring Society</h1>
   <p class="lede"><em>Social Conflict and Civil Liberties in 1920s America</em></p>
-  <p>The 1920s roared with jazz, cars, and new fortunes. They also roared with fear, anger, and argument. Walk through a pixel-art museum, study the evidence, finish quests, and answer two Guiding Questions about freedom, equality, and human dignity.</p>
+  <p>The 1920s roared with jazz, cars, and new fortunes. They also roared with fear, anger, and argument. Walk through a museum, study the evidence, finish quests, and answer two Guiding Questions about freedom, equality, and human dignity.</p>
   <p class="cta"><button class="btn gold big" data-play>&#9654; Enter the museum</button> <a class="btn big" href="#gallery-1">Browse the galleries</a></p>
   <p class="small">Play in any modern desktop browser. Touch controls are included. Progress saves automatically in your browser.</p>
  </div>
@@ -172,13 +172,14 @@
 </section>
 </main>
 
-<footer class="site-foot"><p>The Roaring Society &middot; a student research project on social conflict and civil liberties in 1920s America.</p><p class="small">Images from Wikimedia Commons (public domain unless a Source Card says otherwise). All collectible items are labeled replicas. Case files and fictional characters are always labeled.</p></footer>
+<footer class="site-foot"><p class="creator-credit">Created by Anish Mhaskar, Aarav Mishra, Manvi Mishra, and Myra Mehrotra.</p><p>The Roaring Society &middot; a student research project on social conflict and civil liberties in 1920s America.</p><p class="small">Images from Wikimedia Commons (public domain unless a Source Card says otherwise). All collectible items are labeled replicas. Case files and fictional characters are always labeled.</p></footer>
 
 <!-- ============ GAME ============ -->
 <div id="game" hidden>
  <canvas id="view" width="960" height="540" aria-label="First-person view of the museum"></canvas>
  <div id="hud">
   <div id="banner" role="status" aria-live="polite"></div>
+  <div id="score" role="status" aria-live="polite">0 Curator Points</div>
   <div id="tracker" hidden></div>
   <div class="mini-wrap"><canvas id="minimap" width="150" height="150" aria-hidden="true"></canvas><span class="floor">F1</span></div>
   <div id="cross"></div>
@@ -189,7 +190,19 @@
   <div class="hud-btns"><button class="btn sm" onclick="Game.questBook()" aria-label="Quest Book">Q</button><button class="btn sm" onclick="Game.inventory()" aria-label="Inventory">I</button><button class="btn sm" onclick="Game.fullMap()" aria-label="Map">M</button><button class="btn sm" onclick="Game.teleportMenu()" aria-label="Teleport">T</button><button class="btn sm" onclick="Game.pause()" aria-label="Menu">&#9776;</button></div>
   <div id="joy" aria-hidden="true"><div id="joyknob"></div></div><div id="lookzone" aria-hidden="true"></div>
   <div class="tbtns"><button id="btn-j" class="btn">&#9650;</button><button id="btn-e" class="btn gold">E</button><button id="btn-q" class="btn">Q</button><button id="btn-m" class="btn">&#9776;</button></div>
-  <div id="start-card" role="dialog" aria-label="Start"><div class="ov-card"><h2 class="pix">The Roaring Society</h2><p>Welcome, visitor. Gold frames are primary sources, silver frames are secondary sources, and green plaques are evidence. Press <b>T</b> at any time to teleport.</p><p class="small">WASD to move &middot; mouse to look &middot; E to interact &middot; Q quests &middot; I inventory &middot; M map</p><button class="btn gold big" onclick="Game.begin()">Begin</button> <button class="btn" onclick="Game.help()">Controls</button> <button class="btn ghost" onclick="Game.exit()">Back to website</button></div></div>
+  <div id="start-card" role="dialog" aria-modal="true" aria-labelledby="welcome-title"><div class="ov-card">
+   <div class="welcome-copy"><p class="eyebrow">Welcome to the museum</p><h2 id="welcome-title">The Roaring Society</h2>
+   <p>Explore how freedom and civil liberties were contested in 1920s America. Here is how to complete your visit:</p>
+   <ol class="visit-steps">
+    <li><b>Start at the Visitor Directory.</b> Walk to the directory in the Entrance Hall, look at it and press <b>E</b>.</li>
+    <li><b>Follow Galleries I–V.</b> Begin in Gallery I in the southwest wing, then continue around the courtyard. Press <b>T</b> to teleport or <b>M</b> for the map.</li>
+    <li><b>Study the exhibits.</b> Examine gold primary sources, silver secondary sources and green evidence plaques with <b>E</b>.</li>
+    <li><b>Complete quests.</b> Press <b>Q</b> for tasks and exact locations. Pin a quest to mark its destination. Read sources and finish the activities to earn points and five gallery stamps.</li>
+    <li><b>Build your final argument.</b> Visit the Research Room in the east wing, then answer the two Guiding Questions in the Synthesis Gallery in the southeast wing.</li>
+   </ol>
+   <p class="visit-controls"><b>WASD / arrows:</b> move · <b>Mouse:</b> look · <b>E:</b> interact · <b>Q:</b> quests · <b>I:</b> inventory<br>Dialogs release your mouse. Click the museum view to look around again. Hidden passages and their keys are optional discoveries.</p>
+   </div><div class="welcome-actions"><button class="btn gold big" onclick="Game.begin()">Begin my visit</button> <button class="btn" onclick="Game.help()">All controls</button> <button class="btn ghost" onclick="Game.exit()">Back to website</button></div>
+  </div></div>
  </div>
 </div>
 <noscript><p style="padding:1rem;background:#fff3cd">The interactive museum needs JavaScript. All research text above is readable without it.</p></noscript>

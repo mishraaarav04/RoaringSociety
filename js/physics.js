@@ -29,6 +29,51 @@ Phys.los=function(ax,ay,az,bx,by,bz){
  return true};
 /* NPC / generic ground check */
 Phys.walkable=function(x,y,r){const p=probe(x,y,0,r||.22,1.7);return p.ok&&p.fl<.08};
+/* Keep a full body clear along the entire move, including diagonal corners. */
+Phys.clearSegment=function(ax,ay,bx,by,r){
+ const steps=Math.max(1,Math.ceil(Math.hypot(bx-ax,by-ay)/.12));
+ for(let i=0;i<=steps;i++){const t=i/steps;if(!Phys.walkable(ax+(bx-ax)*t,ay+(by-ay)*t,r))return false}return true;
+};
+/* Teleports and NPC spawns use clearance beyond the body and room to walk away. */
+Phys.safePosition=function(x,y,opts){
+ opts=opts||{};const radius=opts.radius||.5,g=opts.gallery===undefined?W.blockAt(x,y):opts.gallery;
+ const valid=(px,py)=>{
+  if(W.blockAt(px,py)!==g||!Phys.walkable(px,py,radius))return false;
+  if(!opts.escape)return true;
+  return [[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>Phys.clearSegment(px,py,px+dx*.85,py+dy*.85,Phys.R)).length>=2;
+ };
+ if(valid(x,y))return {x,y};
+ const candidates=[];const range=opts.range||5;
+ for(let dx=-range;dx<=range;dx+=.25)for(let dy=-range;dy<=range;dy+=.25)candidates.push({x:x+dx,y:y+dy,d:dx*dx+dy*dy});
+ candidates.sort((a,b)=>a.d-b.d);
+ return candidates.find(p=>valid(p.x,p.y))||null;
+};
+/* A* on half-metre nodes. Every edge is checked with the visitor's full radius. */
+Phys.route=function(ax,ay,bx,by,g,r){
+ r=r||.38;const goal=Phys.safePosition(bx,by,{radius:r,gallery:g,range:3});if(!goal)return [];
+ if(Phys.clearSegment(ax,ay,goal.x,goal.y,r))return [goal];
+ const size=120,point=id=>({x:(id%size)*.5+.25,y:Math.floor(id/size)*.5+.25});
+ const idAt=(x,y)=>Math.floor(y*2)*size+Math.floor(x*2);
+ const start=Phys.safePosition(point(idAt(ax,ay)).x,point(idAt(ax,ay)).y,{gallery:g,radius:r,range:1});
+ if(!start)return [];
+ const sid=idAt(start.x,start.y),tid=idAt(goal.x,goal.y),end=point(tid);
+ if(!Phys.clearSegment(ax,ay,point(sid).x,point(sid).y,r)||!Phys.walkable(end.x,end.y,r))return [];
+ const open=[sid],parent=new Map(),cost=new Map([[sid,0]]),closed=new Set(),valid=new Map();
+ const walk=id=>{if(!valid.has(id)){const p=point(id);valid.set(id,W.blockAt(p.x,p.y)===g&&Phys.walkable(p.x,p.y,r))}return valid.get(id)};
+ const heuristic=id=>{const p=point(id);return Math.hypot(p.x-end.x,p.y-end.y)};
+ for(let attempts=0;open.length&&attempts<2200;attempts++){
+  let best=0;for(let i=1;i<open.length;i++)if(cost.get(open[i])+heuristic(open[i])<cost.get(open[best])+heuristic(open[best]))best=i;
+  const id=open.splice(best,1)[0];if(id===tid){const result=[end];let cur=id;while(parent.has(cur)){cur=parent.get(cur);result.unshift(point(cur))}return result}
+  closed.add(id);const p=point(id);
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){
+   const nx=id%size+dx,ny=Math.floor(id/size)+dy;if(nx<0||ny<0||nx>=size||ny>=size)continue;
+   const next=ny*size+nx;if(closed.has(next)||!walk(next))continue;const q=point(next);
+   if(!Phys.clearSegment(p.x,p.y,q.x,q.y,r))continue;
+   const distance=cost.get(id)+Math.hypot(dx,dy)*.5;
+   if(distance<(cost.get(next)===undefined?Infinity:cost.get(next))){cost.set(next,distance);parent.set(next,id);if(!open.includes(next))open.push(next)}
+  }
+ }return [];
+};
 /* advance player state P by dt given wish vector (vx,vy in m/s) */
 Phys.step=function(P,vx,vy,dt,jump){
  // horizontal, axis separated, with sub-steps to avoid tunnelling

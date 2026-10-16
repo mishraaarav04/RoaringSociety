@@ -15,7 +15,8 @@ P.free=free;
 function station(id,g,x,y,label,iconZ,pick,reach){W.stations.push({id,g,x,y,label,iconZ:iconZ||2.2,pick:pick||.9,reach:reach})}
 
 /* ---------- reusable furniture ---------- */
-function plant(ch,x,y){W.box(ch,x-.22,y-.22,0,x+.22,y+.22,.45,{all:'wood_dark',top:'dirt'},{solid:true});W.box(ch,x-.3,y-.3,.45,x+.3,y+.3,1.1,'leaves',{solid:false});W.box(ch,x-.2,y-.2,1.1,x+.2,y+.2,1.4,'leaves2',{solid:false})}
+P.visualPlants=[];
+function plant(ch,x,y){P.visualPlants.push([x,y]);W.addSolid({x0:x-.22,x1:x+.22,y0:y-.22,y1:y+.22,b:0,t:.45,kind:'plant'})}
 P.plant=plant;
 function desk(ch,x0,y0,x1,y1,h){h=h||1.0;W.box(ch,x0,y0,0,x1,y1,h-.06,{all:'wood_dark'},{kind:'table'});W.box(ch,x0-.05,y0-.05,h-.06,x1+.05,y1+.05,h,{all:'wood_light',top:'leather'},{solid:false})}
 function pedestal(ch,x,y,h,tile){tile=tile||'marble_white';W.box(ch,x-.4,y-.4,0,x+.4,y+.4,h-.08,{all:tile,top:tile},{solid:true,noTop:true});W.box(ch,x-.46,y-.46,h-.08,x+.46,y+.46,h,{all:tile},{solid:false});W.box(ch,x-.46,y-.46,0,x+.46,y+.46,.1,{all:tile},{solid:false})}

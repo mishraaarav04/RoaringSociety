@@ -50,7 +50,8 @@ W.chunk=chunk;W._chunks=()=>chunks;
 const SHADE={top:1,bot:.55,x:.84,z:.92};
 /* one quad: origin o (three coords), unit vectors du,dv (three coords), lengths, tile rect, v-fractions f0..f1, u-fractions */
 function qd(ch,o,du,dv,lu,lv,tile,light,fv0,fv1,fu0,fu1,aoBottom){
- const r=A.uv(tile);fv0=fv0||0;fv1=fv1===undefined?1:fv1;fu0=fu0||0;fu1=fu1===undefined?1:fu1;
+ if(tile==='water')ch=chunk('water');
+ const r=tile==='water'?[0,0,1,1]:A.uv(tile);fv0=fv0||0;fv1=fv1===undefined?1:fv1;fu0=fu0||0;fu1=fu1===undefined?1:fu1;
  const u0=r[0]+(r[2]-r[0])*fu0,u1=r[0]+(r[2]-r[0])*fu1,v0=r[1]+(r[3]-r[1])*fv0,v1=r[1]+(r[3]-r[1])*fv1;
  const P=[[o[0],o[1],o[2]],[o[0]+du[0]*lu,o[1]+du[1]*lu,o[2]+du[2]*lu],[o[0]+du[0]*lu+dv[0]*lv,o[1]+du[1]*lu+dv[1]*lv,o[2]+du[2]*lu+dv[2]*lv],[o[0]+dv[0]*lv,o[1]+dv[1]*lv,o[2]+dv[2]*lv]];
  const UV=[[u0,v0],[u1,v0],[u1,v1],[u0,v1]];
@@ -122,7 +123,7 @@ W.buildGeometry=function(ch){
  g.setAttribute('uv',new THREE.Float32BufferAttribute(ch.uv,2));
  g.setAttribute('color',new THREE.Float32BufferAttribute(ch.col,3));
  g.setIndex(ch.n>65000?new THREE.Uint32BufferAttribute(ch.idx,1):new THREE.Uint16BufferAttribute(ch.idx,1));
- g.computeBoundingSphere();g.computeBoundingBox();return g;
+ g.computeVertexNormals();g.computeBoundingSphere();g.computeBoundingBox();return g;
 };
 /* standalone textured box geometry (for animated doors, NPC parts): tile string, size in metres, centred on origin */
 W.boxGeo=function(w,h,d,tile,light){
