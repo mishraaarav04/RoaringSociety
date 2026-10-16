@@ -58,3 +58,12 @@ Narration uses recorded clips in `assets/voice/line-NN.mp3` (lines 1-50). `js/vo
 Five 1920s recordings in `assets/music/` play in a loop for the whole visit, starting on a random track. Volume is the Music setting times 0.4 (about 20% of full at the default of 0.5), so it stays quiet under the narration. Music pauses while the credits video plays. If a track cannot load, the built-in synth music plays instead. Edit `TRACKS` and `BGM_LEVEL` in `js/game.js` to change the playlist or loudness. Tracks: Whiteman, "Whispering"; Eubie Blake, "Charleston Rag"; Broadway Nitelites, "I Wanna Be Loved"; "2 to 2"; Alexander, "Where's That Band".
 
 Easter egg: after the final quest (all five gallery stamps and the Curator's Argument), the Curator's Argument dialog shows "One more thing…", which opens the credits video (`assets/video/credits.mp4`, a 720x1280 web copy of the original). It can be replayed from the Curator's Office certificate screen. The video has no captions.
+
+## Student parody films
+
+Two student-made films hang as secondary-source exhibits (silver frames, upper level), each marked with a "Parody · modern, not a 1920s source" badge and a Source Card with a short blurb and an MLA citation:
+
+- `g3-16` *Nosferatu* (student parody), Gallery III, Hall of Fear, upper level. A parody of the 1922 film.
+- `g5-14` *Temperance* (student parody), Gallery V, Newsroom, upper level (next to the speakeasy exhibit). A parody of speakeasies and the temperance movement.
+
+Files are in `assets/video/` (`*-parody.mp4` plus a `*-poster.jpg` used on the wall painting and as the video poster). To add another film, add an entry in `js/data.js` with `video`, `poster`, `parody:1` and an `mla` string; no other code changes are needed. Music and narration pause while a video plays. The films have no captions. Creator names on the cards are copied from each film's title card (first names only).

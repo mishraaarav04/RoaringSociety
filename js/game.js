@@ -77,8 +77,8 @@ const roomsHeard=new Set();
 function roomClip(g,room){const V=RS.VOICE;if(!V||!V.rooms||g===9)return 0;const list=V.rooms[g],c=list&&list[room],k=g+':'+room;if(!c||roomsHeard.has(k))return 0;roomsHeard.add(k);return c}
 function cue(k){const V=RS.VOICE;if(V&&V.events&&V.events[k])RS.narrate(V.text[V.events[k]],V.events[k])}
 let cardCued=false;
-RS.on('credits.start',()=>{try{if(RS._clip){RS._clip.pause();RS._clip=null}if('speechSynthesis' in window)speechSynthesis.cancel()}catch(e){}stopMusic()});
-RS.on('credits.end',()=>{if(S.settings.music>0&&G.seenStart&&!$('#game').hidden)startMusic()});
+RS.on('video.start',()=>{try{if(RS._clip){RS._clip.pause();RS._clip=null}if('speechSynthesis' in window)speechSynthesis.cancel()}catch(e){}stopMusic()});
+RS.on('video.end',()=>{if(S.settings.music>0&&G.seenStart&&!$('#game').hidden)startMusic()});
 RS.on('quest.complete',()=>cue('quest'));RS.on('secret',()=>cue('secret'));
 RS.on('artwork.viewed',()=>{if(!cardCued&&S.seen.length===1){cardCued=true;cue('card')}});
 function showBanner(t,acc){banner.textContent=t;banner.style.setProperty('--acc',acc);banner.classList.add('show');clearTimeout(bannerT);bannerT=setTimeout(()=>banner.classList.remove('show'),3500)}

@@ -112,9 +112,11 @@ RS.charts={
 
 /* ---------- Artwork viewer (pop-up) ---------- */
 let overlayEl=null,lastFocus=null;
-RS.closeViewer=function(){if(overlayEl){overlayEl.remove();overlayEl=null;RS.emit('viewer.close');if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}};
+RS.closeViewer=function(){if(overlayEl){const vid=overlayEl.querySelector('video');if(vid){try{vid.pause()}catch(e){}}if(RS._vidStop){RS._vidStop();RS._vidStop=null}overlayEl.remove();overlayEl=null;RS.emit('viewer.close');if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}};
 RS.viewing=()=>!!overlayEl;
-RS.mla=(art)=>{const b=D.BIB.find(x=>x.id===art.cite);return b?b.mla:''};
+RS.mla=(art)=>{const b=D.BIB.find(x=>x.id===art.cite);return b?b.mla:(art.mla||'')};
+/* Tell the game when a video starts or stops so background music and narration can step aside. Returns a function that marks it stopped. */
+RS.watchVideo=function(v){let on=false;const set=x=>{if(x!==on){on=x;RS.emit(x?'video.start':'video.end')}};v.addEventListener('play',()=>set(true));['pause','ended'].forEach(e=>v.addEventListener(e,()=>set(false)));return ()=>set(false)};
 RS.openArtwork=function(id,opts){
  const art=D.byId[id];if(!art)return;
  opts=opts||{};
@@ -127,6 +129,7 @@ RS.openArtwork=function(id,opts){
  const close=RS.el('button',{class:'v-close','aria-label':'Close',onclick:RS.closeViewer},['✕']);
  const frame=art.frame;
  const badge=RS.el('span',{class:'badge '+art.kind},[art.kind==='primary'?'Primary source':'Secondary source']);
+ const parody=art.parody?RS.el('span',{class:'badge parody'},['Parody · modern, not a 1920s source']):null;
  const h=RS.el('h2',{class:'pix'},[RS.strip(art.title)]);
  const gtag=RS.el('div',{class:'v-gal',style:'--acc:'+D.G[art.g].accent},[D.G[art.g].n+' · '+D.G[art.g].rooms[art.room]]);
  const cardRows=[['Creator',art.creator],['Date',art.date],['Origin',art.origin],['Type of source',art.kind==='primary'?'Primary':'Secondary'],['Historical context',art.context],['Relevance',art.relevance]];
@@ -139,7 +142,7 @@ RS.openArtwork=function(id,opts){
  const cite=RS.el('details',{class:'cite'},[RS.el('summary',{},['Citation (MLA)']),RS.el('p',{html:RS.mla(art)+(art.f?' Image: Wikimedia Commons (see credit above).':'')}),RS.el('p',{class:'small'},['Suggested reading for this exhibit. The image file is credited separately above.'])]);
  const rel=RS.el('div',{class:'related'},[RS.el('b',{},['Related artworks: '])]);
  (art.related||[]).forEach(r=>{const x=D.byId[r];if(x)rel.append(RS.el('button',{class:'link',onclick:()=>{RS.emit('related',r);RS.openArtwork(r,opts)}},[RS.strip(x.title)]))});
- info.append(close,gtag,badge,h,card,credit,body,prompt,jb,rel,cite);
+ info.append(close,gtag,badge,...(parody?[parody]:[]),h,card,credit,body,prompt,jb,rel,cite);
  const gate=()=>{
   const g=RS.el('div',{class:'gate'},[RS.el('h3',{},['Content note']),RS.el('p',{},['This exhibit discusses racial violence, including mass killing. Images are limited to aftermath and text. You can skip this room and still receive credit for it.']),
    RS.el('button',{class:'btn',onclick:()=>{g.remove();build()}},['Continue']),RS.el('button',{class:'btn ghost',onclick:()=>{g.remove();RS.skipMark(art);RS.closeViewer()}},['Skip this exhibit'])]);
@@ -163,6 +166,11 @@ RS.openArtwork=function(id,opts){
    RS.imageFor(art,1200).then(r=>{if(!r){ph.textContent='No rights-clear image found for this item yet.';return}const im=new Image();im.alt=art.title;im.src=r.url;im.onerror=()=>{ph.textContent='Image unavailable.'};im.onload=()=>{ph.replaceWith(im)};RS.credit(r.file).then(c=>{if(c)credit.append(RS.el('span',{},['Image: '+c.artist+' · '+c.lic+' · ']),RS.el('a',{href:c.page,target:'_blank',rel:'noopener'},['Wikimedia Commons']))})});
   }else if(art.q&&art.doc){
    RS.imageFor(art,1000).then(r=>{if(!r)return;const im=new Image();im.alt='Related image: '+art.title;im.src=r.url;im.className='extra';im.onload=()=>{media.prepend(im);RS.credit(r.file).then(c=>{if(c)credit.append(RS.el('span',{},['Image: '+c.artist+' · '+c.lic+' · ']),RS.el('a',{href:c.page,target:'_blank',rel:'noopener'},['Wikimedia Commons']))})}});
+  }
+  if(art.video){
+   const v=RS.el('video',{class:'v-video',controls:'',playsinline:'',preload:'metadata','aria-label':RS.strip(art.title)});
+   if(art.poster)v.setAttribute('poster',art.poster);v.src=art.video;RS._vidStop=RS.watchVideo(v);
+   media.append(v,RS.el('p',{class:'small hint'},['Student-made parody film. Press play; the background music pauses while it runs.']));
   }
   if(art.chart&&RS.charts[art.chart])media.append(RS.el('div',{class:'chart',html:RS.charts[art.chart]()}));
   if(art.map)media.append(RS.el('div',{class:'chart',html:routeMap()}));

@@ -319,10 +319,9 @@ Sims.finalDone=function(){
 Sims.creditsReel=function(){
  const v=el('video',{controls:'',playsinline:'',preload:'metadata',class:'credits-video','aria-label':'Roaring Society credits video'});
  v.src='assets/video/credits.mp4';
- let playing=false;const set=on=>{if(on!==playing){playing=on;RS.emit(on?'credits.start':'credits.end')}};
- v.addEventListener('play',()=>set(true));v.addEventListener('pause',()=>set(false));v.addEventListener('ended',()=>set(false));
+ const stop=RS.watchVideo(v);
  const w=el('div',{class:'credits-reel'},[el('p',{class:'small'},['Thanks for visiting. Press play for the credits.']),v]);
- RS.overlay('Credits',w,{onClose:()=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}set(false)}});
+ RS.overlay('Credits',w,{onClose:()=>{try{v.pause();v.removeAttribute('src');v.load()}catch(e){}stop()}});
 };
 Sims.curator=function(){
  const w=el('div',{class:'prose'});

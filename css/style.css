@@ -234,3 +234,4 @@ h3,.gq h3{font-size:calc(20px * var(--ui-scale));line-height:1.35}h4,h5,h6{font-
 @media(max-width:500px){.welcome-actions{flex-direction:column}#start-card .welcome-actions .btn{width:100%}}
 
 .credits-reel{text-align:center}.credits-video{display:block;margin:.6rem auto 0;max-width:100%;max-height:68vh;background:#000;border:3px solid var(--ink)}
+.badge.parody{background:#7a3a8c;margin-left:.4rem}.v-video{display:block;margin:0 auto;max-width:100%;max-height:62vh;background:#000;border:3px solid var(--ink)}

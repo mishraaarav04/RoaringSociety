@@ -54,6 +54,7 @@ function paintArt(i){
  x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.fillStyle='#e9dcc0';x.fillRect(0,0,AW,AH);
  if(o.img){const im=o.img,ar=im.width/im.height,w=AW,h=AH;let sx=0,sy=0,sw=im.width,sh=im.height;if(ar>w/h){sw=im.height*w/h;sx=(im.width-sw)/2}else{sh=im.width*h/w;sy=(im.height-sh)/2}x.drawImage(im,sx,sy,sw,sh,0,0,w,h)}
  else placeholder(x,a);
+ if(a.video){x.fillStyle='rgba(20,14,6,.55)';x.beginPath();x.arc(AW/2,AH/2,15,0,7);x.fill();x.fillStyle='#f3e4bf';x.beginPath();x.moveTo(AW/2-5,AH/2-9);x.lineTo(AW/2+9,AH/2);x.lineTo(AW/2-5,AH/2+9);x.closePath();x.fill()}
  if(RS.S.seen.includes(a.id)){x.fillStyle='#2ecc71';x.fillRect(AW-14,AH-14,12,12);x.fillStyle='#fff';x.fillRect(AW-11,AH-8,2,2);x.fillRect(AW-9,AH-6,2,2);x.fillRect(AW-7,AH-10,2,5)}
  o.tex.needsUpdate=true;
 }
@@ -61,6 +62,7 @@ const thumbReq={},thumbUrl={};
 function loadImg(i,url,fallback){const im=new Image();im.crossOrigin='anonymous';im.onload=()=>{art[i].img=im;paintArt(i)};im.onerror=()=>{if(fallback)loadImg(i,fallback)};im.src=url}
 E.loadGallery=function(g){
  if(thumbReq[g])return;thumbReq[g]=1;
+ D.A.forEach((a,i)=>{if(a.g===g&&a.poster&&art[i])loadImg(i,a.poster)});
  const list=[];D.A.forEach((a,i)=>{if(a.g===g&&a.f&&a.f[0]&&art[i])list.push([i,a.f[0]])});if(!list.length)return;
  const direct=f=>RS.fileUrl(f,330);
  // ask the Commons API for real thumbnail URLs (served with CORS headers), fall back to Special:FilePath
